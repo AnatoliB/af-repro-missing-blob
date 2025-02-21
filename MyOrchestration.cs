@@ -16,21 +16,15 @@ namespace Company.Function
             logger.LogInformation("Saying hello.");
             var outputs = new List<string>();
 
-            // Replace name and input with values relevant for your Durable Functions Activity
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Tokyo"));
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Seattle"));
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "London"));
+            outputs.Add(await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput)));
 
-            // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
             return outputs;
         }
 
-        [Function(nameof(SayHello))]
-        public static string SayHello([ActivityTrigger] string name, FunctionContext executionContext)
+        [Function(nameof(ActivityThatReturnsLargeOutput))]
+        public static string ActivityThatReturnsLargeOutput([ActivityTrigger] string name, FunctionContext executionContext)
         {
-            ILogger logger = executionContext.GetLogger("SayHello");
-            logger.LogInformation("Saying hello to {name}.", name);
-            return $"Hello {name}!";
+            return new string('A', 65000);
         }
 
         [Function("MyOrchestration_HttpStart")]
