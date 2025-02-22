@@ -17,12 +17,20 @@ namespace Company.Function
             ILogger logger = context.CreateReplaySafeLogger(nameof(MyOrchestration));
             logger.LogInformation("RunOrchestrator started with isFirstGeneration = {isFirstGeneration}.", isFirstGeneration);
 
-            await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput));
+            if (isFirstGeneration)
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput));
+                }
 
-            var nextTime = context.CurrentUtcDateTime.AddSeconds(10);
-            await context.CreateTimer(nextTime, CancellationToken.None);
-
-            context.ContinueAsNew(true);
+                context.ContinueAsNew(true);
+            }
+            else
+            {
+                context.SetCustomStatus("I'm in gen 2");
+                await context.WaitForExternalEvent<bool>("BlockIndefinitely");
+            }
         }
 
         [Function(nameof(ActivityThatReturnsLargeOutput))]
