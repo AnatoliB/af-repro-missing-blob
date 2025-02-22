@@ -12,19 +12,19 @@ namespace Company.Function
         public static async Task RunOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var isFirstGeneration = !context.GetInput<bool>();
+            var generation = context.GetInput<int>();
 
             ILogger logger = context.CreateReplaySafeLogger(nameof(MyOrchestration));
-            logger.LogInformation("RunOrchestrator started with isFirstGeneration = {isFirstGeneration}.", isFirstGeneration);
+            logger.LogInformation("RunOrchestrator started (generation {generation}).", generation);
 
-            if (isFirstGeneration)
+            if (generation == 0)
             {
                 for (int i = 0; i < 100; i++)
                 {
                     await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput));
                 }
 
-                context.ContinueAsNew(true);
+                context.ContinueAsNew(generation + 1);
             }
             else
             {
