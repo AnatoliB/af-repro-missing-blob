@@ -9,16 +9,18 @@ namespace Company.Function
     public static class MyOrchestration
     {
         [Function(nameof(MyOrchestration))]
-        public static async Task<List<string>> RunOrchestrator(
+        public static async Task RunOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context)
         {
             ILogger logger = context.CreateReplaySafeLogger(nameof(MyOrchestration));
-            logger.LogInformation("Saying hello.");
-            var outputs = new List<string>();
+            logger.LogInformation("RunOrchestrator started");
 
-            outputs.Add(await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput)));
+            await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput));
 
-            return outputs;
+            var nextTime = context.CurrentUtcDateTime.AddSeconds(10);
+            await context.CreateTimer(nextTime, CancellationToken.None);
+
+            context.ContinueAsNew(null);
         }
 
         [Function(nameof(ActivityThatReturnsLargeOutput))]
