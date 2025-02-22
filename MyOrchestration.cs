@@ -8,6 +8,8 @@ namespace Company.Function
 {
     public static class MyOrchestration
     {
+        private static readonly Random random = new(0);
+
         [Function(nameof(MyOrchestration))]
         public static async Task RunOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context)
@@ -17,26 +19,32 @@ namespace Company.Function
             ILogger logger = context.CreateReplaySafeLogger(nameof(MyOrchestration));
             logger.LogInformation("RunOrchestrator started (generation {generation}).", generation);
 
-            if (generation == 0)
-            {
-                for (int i = 0; i < 100; i++)
-                {
-                    await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput));
-                }
+            int activities = await context.CallActivityAsync<int>(nameof(GetRandom), 200);
+            logger.LogInformation("Generation {generation} will have {activities} activities.", generation, activities);
 
-                context.ContinueAsNew(generation + 1);
-            }
-            else
+            var delay = TimeSpan.FromSeconds(10);
+            await context.CreateTimer(context.CurrentUtcDateTime.Add(delay), CancellationToken.None);
+
+            for (int i = 0; i < activities; i++)
             {
-                context.SetCustomStatus("I'm in gen 2");
-                await context.WaitForExternalEvent<bool>("BlockIndefinitely");
+                await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput));
             }
+
+            logger.LogInformation("Finishing generation {generation} ({activities} activities). ContinueAsNew in {delay}...", generation, activities, delay);
+            await context.CreateTimer(context.CurrentUtcDateTime.Add(delay), CancellationToken.None);
+            context.ContinueAsNew(generation + 1);
         }
 
         [Function(nameof(ActivityThatReturnsLargeOutput))]
         public static string ActivityThatReturnsLargeOutput([ActivityTrigger] string name, FunctionContext executionContext)
         {
             return new string('A', 65000);
+        }
+
+        [Function(nameof(GetRandom))]
+        public static int GetRandom([ActivityTrigger] int max)
+        {
+            return random.Next(max);
         }
 
         [Function("MyOrchestration_HttpStart")]
