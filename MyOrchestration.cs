@@ -46,7 +46,7 @@ namespace Company.Function
         }
 
         [Function(nameof(FunkyActivity))]
-        public static string FunkyActivity([ActivityTrigger] string name, FunctionContext executionContext)
+        public static async Task<string> FunkyActivity([ActivityTrigger] string name, FunctionContext executionContext)
         {
             if (File.Exists(funkyActivityFilePath))
             {
@@ -55,7 +55,7 @@ namespace Company.Function
 
             File.WriteAllText(funkyActivityFilePath, "I ran before");
             
-            Thread.Sleep(Timeout.Infinite);
+            await Task.Delay(Timeout.Infinite);
             return "I've been waiting forever...";
         }
 
