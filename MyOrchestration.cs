@@ -28,9 +28,14 @@ namespace Company.Function
 
                 var funkyTask = context.CallActivityAsync<string>(nameof(FunkyActivity));
                 var timer = context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(10), CancellationToken.None);
+context.SetCustomStatus("Before Task.WhenAny");
+                logger.LogWarning("Before Task.WhenAny");
                 await Task.WhenAny(funkyTask, timer);
+logger.LogWarning("After Task.WhenAny");
+                context.SetCustomStatus("After Task.WhenAny");
 
                 context.ContinueAsNew(generation + 1);
+logger.LogWarning("After ContinueAsNew");
             }
             else
             {
