@@ -8,6 +8,8 @@ namespace Company.Function
 {
     public static class MyOrchestration
     {
+private static readonly string funkyActivityFilePath = Path.GetTempPath() + "proof_I_ran_before.txt";
+
         [Function(nameof(MyOrchestration))]
         public static async Task RunOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context)
@@ -42,13 +44,12 @@ namespace Company.Function
         [Function(nameof(FunkyActivity))]
         public static string FunkyActivity([ActivityTrigger] string name, FunctionContext executionContext)
         {
-            var path = Path.GetTempPath() + "proof_I_ran_before.txt";
-            if (File.Exists(path))
+                        if (File.Exists(funkyActivityFilePath))
             {
                 return "I ran before!";
             }
 
-            File.WriteAllText(path, "I ran before");
+            File.WriteAllText(funkyActivityFilePath, "I ran before");
             
             Thread.Sleep(Timeout.Infinite);
             return "I've been waiting forever...";
@@ -61,6 +62,11 @@ namespace Company.Function
             FunctionContext executionContext)
         {
             ILogger logger = executionContext.GetLogger("MyOrchestration_HttpStart");
+
+            if (File.Exists(funkyActivityFilePath))
+            {
+                File.Delete(funkyActivityFilePath);
+            }
 
             // Function input comes from the request content.
             string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
