@@ -39,6 +39,21 @@ namespace Company.Function
             return new string('A', 65000);
         }
 
+        [Function(nameof(FunkyActivity))]
+        public static string FunkyActivity([ActivityTrigger] string name, FunctionContext executionContext)
+        {
+            var path = Path.GetTempPath() + "proof_I_ran_before.txt";
+            if (File.Exists(path))
+            {
+                return "I ran before!";
+            }
+
+            File.WriteAllText(path, "I ran before");
+            
+            Thread.Sleep(Timeout.Infinite);
+            return "I've been waiting forever...";
+        }
+
         [Function("MyOrchestration_HttpStart")]
         public static async Task<HttpResponseData> HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
