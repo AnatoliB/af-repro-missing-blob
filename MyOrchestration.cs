@@ -8,7 +8,7 @@ namespace Company.Function
 {
     public static class MyOrchestration
     {
-private static readonly string funkyActivityFilePath = Path.GetTempPath() + "proof_I_ran_before.txt";
+        private static readonly string funkyActivityFilePath = Path.GetTempPath() + "proof_I_ran_before.txt";
 
         [Function(nameof(MyOrchestration))]
         public static async Task RunOrchestrator(
@@ -25,6 +25,10 @@ private static readonly string funkyActivityFilePath = Path.GetTempPath() + "pro
                 {
                     await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput));
                 }
+
+                var funkyTask = context.CallActivityAsync<string>(nameof(FunkyActivity));
+                var timer = context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(10), CancellationToken.None);
+                await Task.WhenAny(funkyTask, timer);
 
                 context.ContinueAsNew(generation + 1);
             }
@@ -44,7 +48,7 @@ private static readonly string funkyActivityFilePath = Path.GetTempPath() + "pro
         [Function(nameof(FunkyActivity))]
         public static string FunkyActivity([ActivityTrigger] string name, FunctionContext executionContext)
         {
-                        if (File.Exists(funkyActivityFilePath))
+            if (File.Exists(funkyActivityFilePath))
             {
                 return "I ran before!";
             }
