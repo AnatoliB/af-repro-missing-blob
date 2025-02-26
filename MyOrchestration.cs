@@ -19,10 +19,13 @@ namespace Company.Function
 
             if (generation == 0)
             {
+                var tasks = new List<Task<string>>();
                 for (int i = 0; i < 100; i++)
                 {
-                    await context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput));
+                    tasks.Add(context.CallActivityAsync<string>(nameof(ActivityThatReturnsLargeOutput)));
                 }
+
+                await Task.WhenAll(tasks);
 
                 context.ContinueAsNew(generation + 1);
             }
