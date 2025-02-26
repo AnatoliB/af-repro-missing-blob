@@ -37,8 +37,9 @@ namespace Company.Function
         }
 
         [Function(nameof(ActivityThatReturnsLargeOutput))]
-        public static string ActivityThatReturnsLargeOutput([ActivityTrigger] string name, FunctionContext executionContext)
+        public static async Task<string> ActivityThatReturnsLargeOutput([ActivityTrigger] string name, FunctionContext executionContext)
         {
+            await Task.Delay(1000);
             return new string('A', 65000);
         }
 
